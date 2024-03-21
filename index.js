@@ -1,34 +1,42 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const UserModel = require('./UserModel');
+const express = require('express')
+const mongoose = require('mongoose')
+const cors = require('cors')
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const app = express()
+app.use(cors())
+app.use(express.json())
+mongoose.connect('mongodb+srv://vandanaakula004:vandana8125@cluster0.qkkoigv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(
+    ()=>console.log('db connected')
+).catch(err=>console.error(err))
 
-mongoose.connect('mongodb+srv://vandanaakula004:vandana8125@cluster0.qkkoigv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
-    .then(() => console.log('DB connected...'))
-    .catch(err => console.error(err));
-
-    app.post('/register', async (req, res) => {
-        const { email, password } = req.body;
-        try {
-            const existingUser = await UserModel.findOne({ email });
-            if (existingUser) {
-                return res.json("User already exists");
+const facultySchema = mongoose.Schema({
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    password: {
+        type: String,
+        required: true
+    }
+});
+const UserModel = mongoose.model('Faculty', facultySchema);
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    UserModel.findOne({email: email})
+    .then(user => {
+        if(user){
+            if(user.password === password){
+                res.json("login success")
             }
-            const newUser = new UserModel({ email, password });
-            await newUser.save();
-            return res.json("Registration success");
-        } catch (err) {
-            console.error(err);
-            return res.status(500).json({ error: "Internal server error" });
+            else{
+                res.json("the password is incorrect")
+            }
+        }else{
+            res.json("NO record existed")
         }
-    });
-    
-    const PORT = process.env.PORT || 3003;
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
-    
+    })
+})
+app.listen(3001, ()=>{
+    console.log("Server is running")
+})
